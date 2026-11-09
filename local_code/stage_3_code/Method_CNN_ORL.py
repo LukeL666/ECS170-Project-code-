@@ -9,7 +9,7 @@ import numpy as np
 class Method_CNN_ORL(method, nn.Module):
     data = None
 
-    max_epoch = 10
+    max_epoch = 15
     learning_rate = 1e-3
     batch_size = 16 
 
