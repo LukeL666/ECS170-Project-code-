@@ -1,4 +1,4 @@
-# At ECS170_Fall_2026_Source_Code_Template directory, run the following command to execute the main.py script:
+# At ECS170_Fall_2026_Source_Code_Template directory， run the following command to start the program:
 # python -m local_code.stage_3_code.main
 
 
@@ -15,9 +15,9 @@ from local_code.stage_3_code.Method_CNN_CIFAR import Method_CNN_CIFAR
 
 from local_code.stage_3_code.Setting_Train_Test_Split import Setting_Train_Test_Split
 from local_code.stage_1_code.Result_Saver import Result_Saver
-from local_code.stage_1_code.Evaluate_Accuracy import Evaluate_Accuracy
+from local_code.stage_3_code.Evaluate_Metrics import Evaluate_Metrics
 
-DATASET = ['ORL', 'CIFAR']
+DATASET = ['CIFAR', 'MNIST', 'ORL']
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
@@ -51,7 +51,7 @@ def build_components(dataset_name):
     result.result_destination_file_name = result_prefix
     result.fold_count = 0
 
-    evaluate = Evaluate_Accuracy('accuracy', '')
+    evaluate = Evaluate_Metrics('metrics', '')
 
     setting = Setting_Train_Test_Split('train-test split', dataset_name)
     setting.prepare(ds, method, result, evaluate)
@@ -69,10 +69,10 @@ def plot_learning_curve(method, dataset_name):
     plt.show()
 
     plt.figure()
-    plt.plot(method.train_acc_list, label='train accuracy')
+    plt.plot(method.train_acc_list, label='train F1 score')
     plt.xlabel('epoch')
-    plt.ylabel('accuracy')
-    plt.title(dataset_name + ' training accuracy')
+    plt.ylabel('F1 score')
+    plt.title(dataset_name + ' training F1 score')
     plt.legend()
     plt.savefig('./result/' + dataset_name + '_acc.png')
     plt.show()
