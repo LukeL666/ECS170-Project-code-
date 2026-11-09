@@ -17,7 +17,7 @@ from local_code.stage_3_code.Setting_Train_Test_Split import Setting_Train_Test_
 from local_code.stage_1_code.Result_Saver import Result_Saver
 from local_code.stage_3_code.Evaluate_Metrics import Evaluate_Metrics
 
-DATASET = ['CIFAR']
+DATASET = ['CIFAR', 'MNIST', 'ORL']
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
