@@ -21,7 +21,6 @@ RESULT_FOLDER = './result/stage_4_result/'
 
 print("Initializing GloVe Utils (this may take a minute)...")
 
-# Updated path for Glove50 and the new filename
 glove_filename = 'wiki_giga_2024_50_MFT20_vectors_seed_123_alpha_0.75_eta_0.075_combined.txt'
 GLOVE_PATH = os.path.join(DATA_FOLDER, 'Glove50', glove_filename)
 
@@ -83,7 +82,6 @@ def plot_learning_curve_cls(method, cell_type):
     history = method.history
     epochs = range(1, len(history['train_loss']) + 1)
     
-    # Plot Training Loss
     plt.figure()
     plt.plot(epochs, history['train_loss'], label='train loss')
     plt.xlabel('epoch')
@@ -93,7 +91,6 @@ def plot_learning_curve_cls(method, cell_type):
     plt.savefig(os.path.join(RESULT_FOLDER, f'cls_{cell_type}_loss.png'))
     plt.close() 
     
-    # Plot Train and Validation Accuracy
     plt.figure()
     plt.plot(epochs, history['train_acc'], label='train acc')
     plt.plot(epochs, history['val_acc'], label='val acc')
