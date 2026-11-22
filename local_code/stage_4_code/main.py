@@ -122,7 +122,6 @@ if __name__ == '__main__':
     os.makedirs(RESULT_FOLDER, exist_ok=True)
     CELLS = ['rnn', 'lstm', 'gru']
 
-    # --- Part 1: Text Classification ---
     print('\n' + '='*40)
     print('STARTING TEXT CLASSIFICATION EXPERIMENTS')
     print('='*40)
@@ -138,7 +137,6 @@ if __name__ == '__main__':
         
         print(f'************ Classification ({cell.upper()}) end ************\n')
 
-    # --- Part 2: Text Generation ---
     print('\n' + '='*40)
     print('STARTING TEXT GENERATION EXPERIMENTS')
     print('='*40)
