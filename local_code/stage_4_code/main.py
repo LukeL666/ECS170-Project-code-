@@ -122,21 +122,21 @@ if __name__ == '__main__':
     os.makedirs(RESULT_FOLDER, exist_ok=True)
     CELLS = ['rnn', 'lstm', 'gru']
 
-    # # --- Part 1: Text Classification ---
-    # print('\n' + '='*40)
-    # print('STARTING TEXT CLASSIFICATION EXPERIMENTS')
-    # print('='*40)
+    # --- Part 1: Text Classification ---
+    print('\n' + '='*40)
+    print('STARTING TEXT CLASSIFICATION EXPERIMENTS')
+    print('='*40)
     
-    # for cell in CELLS:
-    #     setting, method = build_cls_components(cell)
+    for cell in CELLS:
+        setting, method = build_cls_components(cell)
         
-    #     print(f'************ Classification ({cell.upper()}) start ************')
-    #     setting.print_setup_summary()
+        print(f'************ Classification ({cell.upper()}) start ************')
+        setting.print_setup_summary()
         
-    #     setting.load_run_save_evaluate()
-    #     plot_learning_curve_cls(method, cell)
+        setting.load_run_save_evaluate()
+        plot_learning_curve_cls(method, cell)
         
-    #     print(f'************ Classification ({cell.upper()}) end ************\n')
+        print(f'************ Classification ({cell.upper()}) end ************\n')
 
     # --- Part 2: Text Generation ---
     print('\n' + '='*40)
