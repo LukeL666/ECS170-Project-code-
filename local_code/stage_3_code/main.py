@@ -1,95 +1,109 @@
-# At ECS170_Fall_2026_Source_Code_Template directory， run the following command to start the program:
-# python -m local_code.stage_3_code.main
-
+# At ECS170_Fall_2026_Source_Code_Template directory, run the following command to start the program:
+# python -m local_code.stage_4_code.main
 
 import os
+import torch
 from matplotlib import pyplot as plt
 
-from local_code.stage_3_code.Dataset_Loader_MNIST import Dataset_Loader_MNIST
-from local_code.stage_3_code.Dataset_Loader_ORL import Dataset_Loader_ORL
-from local_code.stage_3_code.Dataset_Loader_CIFAR import Dataset_Loader_CIFAR
+from local_code.stage_4_code.Glove_Utils import GloveUtils
+from local_code.stage_4_code.Dataset_Loader_TextCls import Dataset_Loader_TextCls
+from local_code.stage_4_code.Dataset_Loader_TextGen import Dataset_Loader_TextGen
+from local_code.stage_4_code.Method_RNN_Cls import Method_RNN_Cls
+from local_code.stage_4_code.Method_RNN_Gen import Method_RNN_Gen
+from local_code.stage_4_code.Evaluate_Text import Evaluate_TextCls, Evaluate_TextGen
+from local_code.stage_4_code.Result_Saver import Result_Saver
+from local_code.stage_4_code.Setting_Text import Setting_Text
 
-from local_code.stage_3_code.Method_CNN_MNIST import Method_CNN_MNIST
-from local_code.stage_3_code.Method_CNN_ORL import Method_CNN_ORL
-from local_code.stage_3_code.Method_CNN_CIFAR import Method_CNN_CIFAR
-
-from local_code.stage_3_code.Setting_Train_Test_Split import Setting_Train_Test_Split
-from local_code.stage_1_code.Result_Saver import Result_Saver
-from local_code.stage_3_code.Evaluate_Metrics import Evaluate_Metrics
-
-DATASET = ['CIFAR', 'MNIST', 'ORL']
-
+# Resolve project root directory dynamically
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
-DATA_FOLDER = os.path.join(project_root, 'data', 'stage_3_data')
+DATA_FOLDER = os.path.join(project_root, 'data')
+
+# Initialize global GloVe utility
+print("Initializing GloVe Utils (this may take a minute)...")
+GLOVE_PATH = os.path.join(DATA_FOLDER, "Glove", "wiki_giga_2024_200_MFT20_vectors_seed_2024_alpha_0.75_eta_0.05_combined")
+glove = GloveUtils(GLOVE_PATH, dim=200)
 
 
-def build_components(dataset_name):
-    if dataset_name == 'MNIST':
-        ds = Dataset_Loader_MNIST('MNIST', 'hand-written digits')
-        ds.dataset_source_folder_path = DATA_FOLDER
-        ds.dataset_source_file_name = 'MNIST'
-        method = Method_CNN_MNIST('CNN-MNIST', 'CNN for MNIST')
-        result_prefix = 'result_mnist'
-    elif dataset_name == 'ORL':
-        ds = Dataset_Loader_ORL('ORL', 'face images')
-        ds.dataset_source_folder_path = DATA_FOLDER
-        ds.dataset_source_file_name = 'ORL'
-        method = Method_CNN_ORL('CNN-ORL', 'CNN for ORL')
-        result_prefix = 'result_orl'
-    elif dataset_name == 'CIFAR':
-        ds = Dataset_Loader_CIFAR('CIFAR', 'colored objects')
-        ds.dataset_source_folder_path = DATA_FOLDER
-        ds.dataset_source_file_name = 'CIFAR'
-        method = Method_CNN_CIFAR('CNN-CIFAR', 'CNN for CIFAR')
-        result_prefix = 'result_cifar'
-    else:
-        raise ValueError('unknown dataset: ' + dataset_name)
-
-    result = Result_Saver('saver', '')
-    result.result_destination_folder_path = './result/'
-    result.result_destination_file_name = result_prefix
-    result.fold_count = 0
-
-    evaluate = Evaluate_Metrics('metrics', '')
-
-    setting = Setting_Train_Test_Split('train-test split', dataset_name)
+def build_cls_components(cell_type):
+    ds = Dataset_Loader_TextCls(data_root_path=os.path.join(DATA_FOLDER, 'text_classification'), glove_util=glove, max_len=200)
+    method = Method_RNN_Cls(mName=f"RNN_Cls_{cell_type}", mDescription=f"{cell_type.upper()} Cls", emb_matrix=glove.embedding_matrix, cell_type=cell_type, hidden_size=128, epochs=5, batch_size=64)
+    result = Result_Saver(rName=f"cls_result_{cell_type}", folder_path='./results/')
+    evaluate = Evaluate_TextCls()
+    setting = Setting_Text(sName=f"Setting_Cls_{cell_type}", sDescription=f"Cls {cell_type}")
     setting.prepare(ds, method, result, evaluate)
     return setting, method
 
 
-def plot_learning_curve(method, dataset_name):
+def build_gen_components(cell_type):
+    ds = Dataset_Loader_TextGen(file_path=os.path.join(DATA_FOLDER, 'text_generation', 'data'), glove_util=glove, max_len=30)
+    method = Method_RNN_Gen(mName=f"RNN_Gen_{cell_type}", mDescription=f"{cell_type.upper()} Gen", emb_matrix=glove.embedding_matrix, glove=glove, cell_type=cell_type, hidden_size=256, epochs=30, batch_size=32)
+    result = Result_Saver(rName=f"gen_result_{cell_type}", folder_path='./results/')
+    evaluate = Evaluate_TextGen()
+    setting = Setting_Text(sName=f"Setting_Gen_{cell_type}", sDescription=f"Gen {cell_type}")
+    setting.prepare(ds, method, result, evaluate)
+    return setting, method
+
+
+def plot_learning_curve_cls(method, cell_type):
+    """Extract metrics from method.history and save learning curves."""
+    history = method.history
+    epochs = range(1, len(history['train_loss']) + 1)
+    
+    # Plot Training Loss
     plt.figure()
-    plt.plot(method.train_loss_list, label='train loss')
+    plt.plot(epochs, history['train_loss'], label='train loss')
     plt.xlabel('epoch')
     plt.ylabel('loss')
-    plt.title(dataset_name + ' training loss')
+    plt.title(cell_type.upper() + ' training loss')
     plt.legend()
-    plt.savefig('./result/' + dataset_name + '_loss.png')
-    plt.show()
-
+    plt.savefig(f'./results/cls_{cell_type}_loss.png')
+    plt.close() 
+    
+    # Plot Train and Validation Accuracy
     plt.figure()
-    plt.plot(method.train_acc_list, label='train F1 score')
+    plt.plot(epochs, history['train_acc'], label='train acc')
+    plt.plot(epochs, history['val_acc'], label='val acc')
     plt.xlabel('epoch')
-    plt.ylabel('F1 score')
-    plt.title(dataset_name + ' training F1 score')
+    plt.ylabel('accuracy')
+    plt.title(cell_type.upper() + ' accuracy')
     plt.legend()
-    plt.savefig('./result/' + dataset_name + '_acc.png')
-    plt.show()
+    plt.savefig(f'./results/cls_{cell_type}_acc.png')
+    plt.close()
 
 
 if __name__ == '__main__':
-    os.makedirs('./result/', exist_ok=True)
+    os.makedirs('./results/', exist_ok=True)
+    CELLS = ['rnn', 'lstm', 'gru']
 
-    for data in DATASET:
-        setting, method = build_components(data)
-
-        print(f'************ {data} start ************')
+    # --- Part 1: Text Classification ---
+    print('\n' + '='*40)
+    print('STARTING TEXT CLASSIFICATION EXPERIMENTS')
+    print('='*40)
+    
+    for cell in CELLS:
+        setting, method = build_cls_components(cell)
+        
+        print(f'************ Classification ({cell.upper()}) start ************')
         setting.print_setup_summary()
+        
+        setting.load_run_save_evaluate()
+        plot_learning_curve_cls(method, cell)
+        
+        print(f'************ Classification ({cell.upper()}) end ************\n')
 
-        score, _ = setting.load_run_save_evaluate()
-        print('Test accuracy:', score)
+    # --- Part 2: Text Generation ---
+    print('\n' + '='*40)
+    print('STARTING TEXT GENERATION EXPERIMENTS')
+    print('='*40)
+    
+    for cell in CELLS:
+        setting, method = build_gen_components(cell)
+        
+        print(f'************ Generation ({cell.upper()}) start ************')
+        setting.print_setup_summary()
+        
+        setting.load_run_save_evaluate()
+        print(f'************ Generation ({cell.upper()}) end ************\n')
 
-        plot_learning_curve(method, data)
-
-        print(f'************ {data} end ************')
+    print("All experiments completed! Check the /results folder.")
