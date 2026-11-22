@@ -2,7 +2,6 @@
 # python -m local_code.stage_4_code.main
 
 import os
-import torch
 from matplotlib import pyplot as plt
 
 from local_code.stage_4_code.Glove_Utils import GloveUtils
